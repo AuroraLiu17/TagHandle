@@ -44,6 +44,7 @@ public class TagImageExtractor {
 	
 	private static void extractFromFolder(List<String> extractTags,
 			File resourceImageFolder, File resourceTagFolder, String exportFolderPath) {
+		System.out.println(String.format("Extract from [%s], [%s] to [%s]", resourceImageFolder.getAbsolutePath(), resourceTagFolder.getAbsolutePath(), exportFolderPath));
 		for (File imageFile : resourceImageFolder.listFiles()) {
 			if (imageFile.isDirectory()) {
 				File subTagFolder = new File(resourceTagFolder, imageFile.getName());
@@ -52,6 +53,7 @@ public class TagImageExtractor {
 			}
 			String tagFileName = getTagFileNameByImageName(imageFile.getName());
 			if (TextUtils.isEmpty(tagFileName)) {
+				System.out.println("Invalid tag file name");
 				continue;
 			}
 			File tagFile = new File(resourceTagFolder, tagFileName);
@@ -62,8 +64,10 @@ public class TagImageExtractor {
 			
 			for (String imageTag : imageTags) {
 				if (extractTags.contains(imageTag)) {
-					FileUtils.copyFile(imageFile, new File(resourceImageFolder, imageFile.getName()));
-					FileUtils.copyFile(tagFile, new File(resourceTagFolder, tagFile.getName()));
+					System.out.println(String.format("Hit image [%s]", imageFile.getAbsolutePath()));
+					FileUtils.copyFile(imageFile, new File(exportFolderPath + RESOURCE_IMAGE_FOLDER_NAME, imageFile.getName()));
+					FileUtils.copyFile(tagFile, new File(exportFolderPath + RESOURCE_TAG_FOLDER_NAME, tagFile.getName()));
+					break;
 				}
 			}
 		}

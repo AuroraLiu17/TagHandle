@@ -156,6 +156,7 @@ public class FileUtils {
 			while ((byteread = inputStream.read(buffer)) != -1) {
 				outputStream.write(buffer, 0, byteread);
 			}
+			System.out.println(String.format("Done copying file from [%s] to [%s]", srcFile.getAbsolutePath(), desFile.getAbsolutePath()));
 			return true;
 		} catch (Exception e) {
 			System.err.println("Failed when copying file ");
