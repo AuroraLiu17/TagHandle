@@ -3,6 +3,7 @@ package extractor;
 import java.io.File;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -22,7 +23,7 @@ public class TagImageExtractor {
 	
 	public static boolean doExtract(String resourceFolderPath, 
 			String exportFolderPath, String tagListFilePath) throws Exception {
-		List<String> tags = readTags(FileUtils.getFile(tagListFilePath, true));
+		Map<String, Integer> tags = readTags(FileUtils.getFile(tagListFilePath, true));
 		if (tags == null || tags.isEmpty()) {
 			System.out.println("Nothing to extract, empty tag list");
 			return false;
@@ -39,10 +40,11 @@ public class TagImageExtractor {
 		File resourceImageFolder = FileUtils.getFolder(resourceImageFolderPath, true);
 		File resourceTagFolder = FileUtils.getFolder(resourceTagFolderPath, true);
 		extractFromFolder(tags, resourceImageFolder, resourceTagFolder, exportFolderPath);
+		System.out.println("Done extracting, result:" + tags.toString());
 		return true;
 	}
 	
-	private static void extractFromFolder(List<String> extractTags,
+	private static void extractFromFolder(Map<String, Integer> extractTags,
 			File resourceImageFolder, File resourceTagFolder, String exportFolderPath) {
 		System.out.println(String.format("Extract from [%s], [%s] to [%s]", resourceImageFolder.getAbsolutePath(), resourceTagFolder.getAbsolutePath(), exportFolderPath));
 		for (File imageFile : resourceImageFolder.listFiles()) {
@@ -63,12 +65,18 @@ public class TagImageExtractor {
 			}
 			
 			for (String imageTag : imageTags) {
-				if (extractTags.contains(imageTag)) {
+				boolean copied = false;
+				Integer count = extractTags.get(imageTag);
+				if (count == null) {
+					continue;
+				}
+				if (!copied) {
 					System.out.println(String.format("Hit image [%s]", imageFile.getAbsolutePath()));
 					FileUtils.copyFile(imageFile, new File(exportFolderPath + RESOURCE_IMAGE_FOLDER_NAME, imageFile.getName()));
 					FileUtils.copyFile(tagFile, new File(exportFolderPath + RESOURCE_TAG_FOLDER_NAME, tagFile.getName()));
-					break;
+					copied = true;
 				}
+				extractTags.put(imageTag, count + 1);
 			}
 		}
 	}
@@ -118,12 +126,12 @@ public class TagImageExtractor {
 		}
 	}
 	
-	private static List<String> readTags(File tagListFile) {
+	private static Map<String, Integer> readTags(File tagListFile) {
 		if (tagListFile == null) {
 			return null;
 		}
 		
-		final List<String> tags = new ArrayList<>();
+		final Map<String, Integer> tags = new HashMap<>();
 		ReaderCallback callback = new ReaderCallback() {
 			@Override
 			public boolean onReadRow(int rowIndex, String rowData) {
@@ -131,7 +139,7 @@ public class TagImageExtractor {
 					if (rowIndex <= 1 && rowData.startsWith("\uFEFF")) {
 						rowData = rowData.substring(1);
 					}
-					tags.add(rowData.trim());
+					tags.put(rowData.trim(), 0);
 				}
 				return true;
 			}
