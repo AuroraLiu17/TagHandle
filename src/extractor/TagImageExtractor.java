@@ -27,7 +27,7 @@ public class TagImageExtractor {
 			System.out.println("Nothing to extract, empty tag list");
 			return false;
 		}
-		
+		System.out.println("On extract tags " + tags.toString());
 		if (!resourceFolderPath.endsWith("/")) {
 			resourceFolderPath += "/";
 		}

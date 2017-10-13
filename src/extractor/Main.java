@@ -16,7 +16,7 @@ public class Main {
 			long startTime = System.currentTimeMillis();
 			boolean result = TagImageExtractor.doExtract(RESOURCE_FOLDER_PATH, 
 					EXPORT_FOLDER_PATH, EXTRACT_TAG_LIST_FILE_PATH);
-			System.out.println(String.format("Done export to [%s], result %s, cost %ds", EXPORT_FOLDER_PATH, String.valueOf(result), startTime / 1000));
+			System.out.println(String.format("Done export to [%s], result %s, cost %ds", EXPORT_FOLDER_PATH, String.valueOf(result), (System.currentTimeMillis() - startTime) / 1000));
 		} catch (Exception e) {
 			System.err.println("Failed extracting images");
 			e.printStackTrace(System.err);
