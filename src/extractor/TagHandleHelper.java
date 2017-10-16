@@ -3,7 +3,6 @@ package extractor;
 import java.io.File;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,8 +58,8 @@ public class TagHandleHelper {
 	
 	public static boolean generateExcel(String resourceFolderPath) 
 			throws Exception {
-		String resourceImageFolderPath = resourceFolderPath + RESOURCE_IMAGE_FOLDER_NAME;
-		String resourceTagFolderPath = resourceFolderPath + RESOURCE_TAG_FOLDER_NAME;
+		String resourceImageFolderPath = resourceFolderPath + "/" + RESOURCE_IMAGE_FOLDER_NAME;
+		String resourceTagFolderPath = resourceFolderPath + "/" + RESOURCE_TAG_FOLDER_NAME;
 		File resourceImageFolder = FileUtils.getFolder(resourceImageFolderPath, true);
 		File resourceTagFolder = FileUtils.getFolder(resourceTagFolderPath, true);
 		
