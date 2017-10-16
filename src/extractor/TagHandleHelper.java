@@ -7,6 +7,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.poi.hssf.usermodel.HSSFRow;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.CellType;
+
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -15,11 +20,12 @@ import utils.RowDataReader;
 import utils.RowDataReader.ReaderCallback;
 import utils.TextUtils;
 
-public class TagImageExtractor {
+public class TagHandleHelper {
 	
 	private static final String RESOURCE_IMAGE_FOLDER_NAME = "image";
 	private static final String RESOURCE_TAG_FOLDER_NAME = "label";
 	private static final String RESOURCE_TAG_FILE_EXTENTION = ".tag";
+	private static final String EXPORT_EXCEL_FILE_NAME = "test_user.xls";
 	
 	public static boolean doExtract(String resourceFolderPath, 
 			String exportFolderPath, String tagListFilePath) throws Exception {
@@ -44,6 +50,45 @@ public class TagImageExtractor {
 		return true;
 	}
 	
+	private static final int COLUMN_INDEX_IMAGE_FILE_NAME = 0;
+	private static final int COLUMN_INDEX_CREATE_TIME = 1;
+	private static final int COLUMN_INDEX_GPS = 2;
+	private static final int COLUMN_INDEX_LOCATION = 3;
+	private static final int COLUMN_INDEX_TAG_INFO = 4;
+	
+	public static boolean generateExcel(String resourceFolderPath) 
+			throws Exception {
+		String resourceImageFolderPath = resourceFolderPath + RESOURCE_IMAGE_FOLDER_NAME;
+		String resourceTagFolderPath = resourceFolderPath + RESOURCE_TAG_FOLDER_NAME;
+		File resourceImageFolder = FileUtils.getFolder(resourceImageFolderPath, true);
+		File resourceTagFolder = FileUtils.getFolder(resourceTagFolderPath, true);
+		
+		HSSFWorkbook workbook = new HSSFWorkbook();
+		HSSFSheet sheet = workbook.createSheet("sheet1");
+		
+		int rowNum = 0;
+		for (File imageFile : resourceImageFolder.listFiles()) {
+			if (imageFile.isDirectory()) {
+				continue;
+			}
+			File tagFile = getTagFileByImageFile(imageFile, resourceTagFolder);
+			if (tagFile == null) {
+				System.out.println("Invalid tag file " + imageFile.getAbsolutePath());
+				continue;
+			}
+			HSSFRow row = sheet.createRow(rowNum);
+			row.createCell(COLUMN_INDEX_IMAGE_FILE_NAME, CellType.STRING).setCellValue(imageFile.getName());
+			String tagInfo = FileUtils.readFileToString(tagFile);
+			row.createCell(COLUMN_INDEX_TAG_INFO, CellType.STRING).setCellValue(tagInfo);;
+			rowNum++;
+		}
+		
+		File exportFile = new File(resourceFolderPath, EXPORT_EXCEL_FILE_NAME);
+		workbook.write(exportFile);
+		workbook.close();
+		return true;
+	}
+	
 	private static void extractFromFolder(Map<String, Integer> extractTags,
 			File resourceImageFolder, File resourceTagFolder, String exportFolderPath) {
 		System.out.println(String.format("Extract from [%s], [%s] to [%s]", resourceImageFolder.getAbsolutePath(), resourceTagFolder.getAbsolutePath(), exportFolderPath));
@@ -53,12 +98,11 @@ public class TagImageExtractor {
 				extractFromFolder(extractTags, imageFile, subTagFolder, exportFolderPath);
 				continue;
 			}
-			String tagFileName = getTagFileNameByImageName(imageFile.getName());
-			if (TextUtils.isEmpty(tagFileName)) {
-				System.out.println("Invalid tag file name");
+			File tagFile = getTagFileByImageFile(imageFile, resourceTagFolder);
+			if (tagFile == null) {
+				System.out.println("Invalid tag file " + imageFile.getAbsolutePath());
 				continue;
 			}
-			File tagFile = new File(resourceTagFolder, tagFileName);
 			List<String> imageTags = readImageTagFile(tagFile);
 			if (imageTags == null || imageTags.size() <= 0) {
 				continue;
@@ -79,6 +123,16 @@ public class TagImageExtractor {
 				extractTags.put(imageTag, count + 1);
 			}
 		}
+	}
+	
+	private static File getTagFileByImageFile(File imageFile, File tagParentFolder) {
+		String tagFileName = getTagFileNameByImageName(imageFile.getName());
+		if (TextUtils.isEmpty(tagFileName)) {
+			System.out.println("Invalid tag file name");
+			return null;
+		}
+		File tagFile = new File(tagParentFolder, tagFileName);
+		return tagFile.exists() ? tagFile : null;
 	}
 	
 	private static String getTagFileNameByImageName(String imageName) {
