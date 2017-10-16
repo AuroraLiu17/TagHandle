@@ -3,6 +3,7 @@ package extractor;
 import java.io.File;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -78,7 +79,7 @@ public class TagHandleHelper {
 			}
 			HSSFRow row = sheet.createRow(rowNum);
 			row.createCell(COLUMN_INDEX_IMAGE_FILE_NAME, CellType.STRING).setCellValue(imageFile.getName());
-			String tagInfo = FileUtils.readFileToString(tagFile);
+			String tagInfo = formatTagFile(FileUtils.readFileToString(tagFile));
 			row.createCell(COLUMN_INDEX_TAG_INFO, CellType.STRING).setCellValue(tagInfo);;
 			rowNum++;
 		}
@@ -148,10 +149,18 @@ public class TagHandleHelper {
 		}
 	}
 	
+	private static String formatTagFile(String data) {
+		if (!TextUtils.isEmpty(data)) {
+			data = data.replace("#", "");
+			data = data.replace("@", "");
+		}
+		return data;
+	}
+	
 	private static final Gson S_GSON = new Gson();
 	private static List<String> readImageTagFile(File tagFile) {
 		try {
-			String jsonData = FileUtils.readFileToString(tagFile);
+			String jsonData = formatTagFile(FileUtils.readFileToString(tagFile));
 			Type type = new TypeToken<Map<String, String>>() {}.getType();  
 		    Map<String, String> tagMap = S_GSON.fromJson(jsonData, type);
 		    if (tagMap == null || tagMap.isEmpty()) {
@@ -161,9 +170,6 @@ public class TagHandleHelper {
 			final List<String> tags = new ArrayList<>();
 			for (String tagInfo : tagMap.values()) {
 				if (!TextUtils.isEmpty(tagInfo)) {
-					if (tagInfo.endsWith("#") || tagInfo.endsWith("@")) {
-						tagInfo = tagInfo.substring(0, tagInfo.length() - 1);
-					}
 					String[] subTagInfo = tagInfo.split(",");
 					if (subTagInfo != null) {
 						for (String subTag : subTagInfo) {
